@@ -1,0 +1,353 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "triggers": {
+            "When_a_resource_event_occurs": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "subject": {
+                                    "type": "string"
+                                },
+                                "eventType": {
+                                    "type": "string"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "authorization": {
+                                            "type": "object",
+                                            "properties": {
+                                                "scope": {
+                                                    "type": "string"
+                                                },
+                                                "action": {
+                                                    "type": "string"
+                                                },
+                                                "evidence": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "role": {
+                                                            "type": "string"
+                                                        },
+                                                        "roleAssignmentScope": {
+                                                            "type": "string"
+                                                        },
+                                                        "roleAssignmentId": {
+                                                            "type": "string"
+                                                        },
+                                                        "roleDefinitionId": {
+                                                            "type": "string"
+                                                        },
+                                                        "principalId": {
+                                                            "type": "string"
+                                                        },
+                                                        "principalType": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "correlationId": {
+                                            "type": "string"
+                                        },
+                                        "httpRequest": {
+                                            "type": "object",
+                                            "properties": {
+                                                "method": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "resourceProvider": {
+                                            "type": "string"
+                                        },
+                                        "resourceUri": {
+                                            "type": "string"
+                                        },
+                                        "operationName": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "subscriptionId": {
+                                            "type": "string"
+                                        },
+                                        "tenantId": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "subject",
+                                "eventType",
+                                "id",
+                                "data"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Verify_trigger_is_Arc_machine_resource": {
+                "runAfter": {
+                    "Get_first_resource": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "JavaScriptCode",
+                "inputs": {
+                    "code": "var arcResourceIdPattern = \"^\\/subscriptions\\/[^\\/]+\\/resourceGroups\\/[^\\/]+\\/providers\\/Microsoft\\.HybridCompute\\/machines\\/[^\\/]+$\";\r\n\r\nvar subject = workflowContext.trigger.outputs.body[0].subject;\r\n\r\nreturn subject.match(arcResourceIdPattern) != null;\r\n",
+                    "explicitDependencies": {
+                        "actions": []
+                    }
+                }
+            },
+            "Get_first_resource": {
+                "runAfter": {},
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "resource",
+                            "type": "object",
+                            "value": "@first(triggerBody())"
+                        }
+                    ]
+                }
+            },
+            "Is_Arc_Machine": {
+                "actions": {
+                    "Get_Arc_Machine_details": {
+                        "type": "Http",
+                        "inputs": {
+                            "uri": "https://management.azure.com@{variables('resource').subject}?api-version=2025-01-13",
+                            "method": "GET",
+                            "authentication": {
+                                "type": "ManagedServiceIdentity"
+                            }
+                        }
+                    },
+                    "Is_Windows": {
+                        "actions": {
+                            "Enable_SA_Benefits": {
+                                "type": "Http",
+                                "inputs": {
+                                    "uri": "https://management.azure.com/@{body('Arc_Machine')?['id']}/licenseProfiles/default?api-version=2023-10-03-preview",
+                                    "method": "PUT",
+                                    "headers": {
+                                        "Content-Type": "application/json"
+                                    },
+                                    "body": {
+                                        "location": "@{body('Arc_Machine')?['location']}",
+                                        "properties": {
+                                            "softwareAssurance": {
+                                                "softwareAssuranceCustomer": true
+                                            }
+                                        }
+                                    },
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        },
+                        "runAfter": {
+                            "Arc_Machine": [
+                                "Succeeded"
+                            ]
+                        },
+                        "else": {
+                            "actions": {
+                                "Terminate_1": {
+                                    "type": "Terminate",
+                                    "inputs": {
+                                        "runStatus": "Cancelled"
+                                    }
+                                }
+                            }
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@toLower(body('Arc_Machine')?['properties']?['osType'])",
+                                        "windows"
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    },
+                    "Arc_Machine": {
+                        "runAfter": {
+                            "Get_Arc_Machine_details": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson",
+                        "inputs": {
+                            "content": "@body('Get_Arc_Machine_details')",
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "properties": {
+                                        "type": "object",
+                                        "properties": {
+                                            "provisioningState": {
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "type": "string"
+                                            },
+                                            "lastStatusChange": {
+                                                "type": "string"
+                                            },
+                                            "displayName": {
+                                                "type": "string"
+                                            },
+                                            "machineFqdn": {
+                                                "type": "string"
+                                            },
+                                            "osName": {
+                                                "type": "string"
+                                            },
+                                            "osVersion": {
+                                                "type": "string"
+                                            },
+                                            "osType": {
+                                                "type": "string"
+                                            },
+                                            "osProfile": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "computerName": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "osSku": {
+                                                "type": "string"
+                                            },
+                                            "osEdition": {
+                                                "type": "string"
+                                            },
+                                            "osInstallDate": {
+                                                "type": "string"
+                                            },
+                                            "domainName": {
+                                                "type": "string"
+                                            },
+                                            "adFqdn": {
+                                                "type": "string"
+                                            },
+                                            "dnsFqdn": {
+                                                "type": "string"
+                                            },
+                                            "mssqlDiscovered": {
+                                                "type": "string"
+                                            },
+                                            "licenseProfile": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "licenseStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "licenseChannel": {
+                                                        "type": "string"
+                                                    },
+                                                    "esuProfile": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "licenseAssignmentState": {
+                                                                "type": "string"
+                                                            },
+                                                            "serverType": {
+                                                                "type": "string"
+                                                            },
+                                                            "esuEligibility": {
+                                                                "type": "string"
+                                                            },
+                                                            "esuKeyState": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Verify_trigger_is_Arc_machine_resource": [
+                        "Succeeded"
+                    ]
+                },
+                "else": {
+                    "actions": {
+                        "Terminate": {
+                            "type": "Terminate",
+                            "inputs": {
+                                "runStatus": "Cancelled"
+                            }
+                        }
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@body('Verify_trigger_is_Arc_machine_resource')",
+                                "@true"
+                            ]
+                        }
+                    ]
+                },
+                "type": "If"
+            }
+        },
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {}
+        }
+    }
+}
