@@ -1,0 +1,191 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "schedule": {
+                        "hours": [
+                            2
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    }
+                },
+                "evaluatedRecurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "schedule": {
+                        "hours": [
+                            2
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    }
+                },
+                "type": "Recurrence"
+            }
+        },
+        "actions": {
+            "Get_Arc_machines_without_SA_benefits": {
+                "runAfter": {},
+                "type": "Http",
+                "inputs": {
+                    "uri": "https://management.azure.com/providers/Microsoft.ResourceGraph/resources?api-version=2022-10-01",
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": {
+                        "query": "resources | where type =~ 'microsoft.hybridcompute/machines' | extend status = tostring(properties.status) | extend osType = tostring(properties.osType) | extend osEdition = tostring(properties.osEdition) | extend osSku = tostring(properties.osSku) | extend licenseStatus = tostring(properties.licenseProfile.licenseStatus) | extend licenseChannel = tostring(properties.licenseProfile.licenseChannel) | extend softwareAssurance = tostring(properties.licenseProfile.softwareAssurance.softwareAssuranceCustomer) | project id,name, location, resourceGroup, subscriptionId, osType, osEdition,osSku,licenseStatus, licenseChannel, softwareAssurance | where osType =~ 'windows' and licenseStatus =~ 'licensed' and softwareAssurance !~ 'true'"
+                    },
+                    "authentication": {
+                        "type": "ManagedServiceIdentity"
+                    }
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                }
+            },
+            "Parse_JSON": {
+                "runAfter": {
+                    "Get_Arc_machines_without_SA_benefits": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson",
+                "inputs": {
+                    "content": "@body('Get_Arc_machines_without_SA_benefits')",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "totalRecords": {
+                                "type": "integer"
+                            },
+                            "count": {
+                                "type": "integer"
+                            },
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "location": {
+                                            "type": "string"
+                                        },
+                                        "resourceGroup": {
+                                            "type": "string"
+                                        },
+                                        "subscriptionId": {
+                                            "type": "string"
+                                        },
+                                        "osType": {
+                                            "type": "string"
+                                        },
+                                        "osEdition": {
+                                            "type": "string"
+                                        },
+                                        "osSku": {
+                                            "type": "string"
+                                        },
+                                        "licenseStatus": {
+                                            "type": "string"
+                                        },
+                                        "licenseChannel": {
+                                            "type": "string"
+                                        },
+                                        "softwareAssurance": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name",
+                                        "location",
+                                        "resourceGroup",
+                                        "subscriptionId",
+                                        "osType",
+                                        "osEdition",
+                                        "osSku",
+                                        "licenseStatus",
+                                        "licenseChannel",
+                                        "softwareAssurance"
+                                    ]
+                                }
+                            },
+                            "facets": {
+                                "type": "array"
+                            },
+                            "resultTruncated": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "For_each": {
+                "foreach": "@body('Parse_JSON')?['data']",
+                "actions": {
+                    "Enable_SA_benefits": {
+                        "type": "Http",
+                        "inputs": {
+                            "uri": "https://management.azure.com@{item()?['id']}/licenseProfiles/default?api-version=2023-10-03-preview",
+                            "method": "PUT",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": {
+                                "location": "@{item()?['location']}",
+                                "properties": {
+                                    "softwareAssurance": {
+                                        "softwareAssuranceCustomer": true
+                                    }
+                                }
+                            },
+                            "authentication": {
+                                "type": "ManagedServiceIdentity"
+                            }
+                        },
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Parse_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {}
+        }
+    }
+}

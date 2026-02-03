@@ -5,5 +5,5 @@
 2. Run the deployment command from this folder:
 
 ```bash
-az deployment group create --resource-group arc  --template-file logicapp-arc-monitoring.bicep
+az deployment group create --resource-group arc --template-file logicapp-arc-monitoring.bicep --parameters deploy.bicepparam
 ```
