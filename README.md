@@ -17,9 +17,15 @@ Main Bicep script is `main.bicep` with parameters file `main.bicepparam` that ne
 
 ## Azure CLI
 
-1. Ensure you are logged in and the resource group exists (name: `arc`).
+1. Ensure you are logged in and there is resource group for deployment (e.g.: `rg-arc-apps`)
+
+if not:
+```bash
+az group create --location swedencentral --name rg-arc-apps
+```
+
 2. Run the deployment command from this folder:
 
 ```bash
-az deployment group create --resource-group arc --template-file main.bicep --parameters main.bicepparam
+az deployment group create --resource-group rg-arc-apps --template-file main.bicep --parameters main.bicepparam
 ```

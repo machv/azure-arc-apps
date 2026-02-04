@@ -139,7 +139,9 @@
                             "uri": "https://management.azure.com@{variables('resource').subject}?api-version=2025-01-13",
                             "method": "GET",
                             "authentication": {
-                                "type": "ManagedServiceIdentity"
+                                "type": "ManagedServiceIdentity",
+                                "identity": "${MI_ID}",
+                                "audience": ""
                             }
                         }
                     },
@@ -162,7 +164,9 @@
                                         }
                                     },
                                     "authentication": {
-                                        "type": "ManagedServiceIdentity"
+                                        "type": "ManagedServiceIdentity",
+                                        "identity": "${MI_ID}",
+                                        "audience": ""
                                     }
                                 }
                             }

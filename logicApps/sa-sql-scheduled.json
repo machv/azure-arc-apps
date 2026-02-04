@@ -32,7 +32,7 @@
             }
         },
         "actions": {
-            "HTTP": {
+            "Get_eligible_SQL_Servers_without_benefits": {
                 "runAfter": {},
                 "type": "Http",
                 "inputs": {
@@ -45,7 +45,9 @@
                         "query": "resources | where type =~ 'microsoft.hybridcompute/machines' | extend status = tostring(properties.status) | project id, JoinID = toupper(id), status, subId=subscriptionId,resourceGroup,location | where status =~'Connected' | join kind=inner (       resources         | where type =~ 'microsoft.hybridcompute/machines/extensions' | where properties.type in ('WindowsAgent.SqlServer','LinuxAgent.SqlServer')         | extend ExtensionType = tostring(properties.type)         | extend LicenseType=tostring(iif(isnull( properties.settings.LicenseType),'NoLicense',properties.settings.LicenseType))         | extend pCoreLic = tostring(properties.settings.UsePhysicalCoreLicense.IsApplied)         | extend provisioningState =  tostring(properties.provisioningState)         | parse id with * '/providers/Microsoft.HybridCompute/machines/' machineName '/extensions/' *         | project MachineId = toupper(substring(id, 0, indexof(id, '/extensions'))), provisioningState, HostName=toupper(machineName),LicenseType,pCoreLic,ExtensionType         | where provisioningState =~'Succeeded'                 ) on $left.JoinID == $right.MachineId     |project id,status,    HostName,LicenseType,pCoreLic,subId,resourceGroup,location, ExtensionType | project  id,HostName, status, LicenseType,subId,resourceGroup,location, ExtensionType | where LicenseType in ('LicenseOnly','NoLicense')"
                     },
                     "authentication": {
-                        "type": "ManagedServiceIdentity"
+                        "type": "ManagedServiceIdentity",
+                        "identity": "${MI_ID}",
+                        "audience": ""
                     }
                 },
                 "runtimeConfiguration": {
@@ -56,13 +58,13 @@
             },
             "Parse_JSON": {
                 "runAfter": {
-                    "HTTP": [
+                    "Get_eligible_SQL_Servers_without_benefits": [
                         "Succeeded"
                     ]
                 },
                 "type": "ParseJson",
                 "inputs": {
-                    "content": "@body('HTTP')",
+                    "content": "@body('Get_eligible_SQL_Servers_without_benefits')",
                     "schema": {
                         "type": "object",
                         "properties": {
@@ -127,7 +129,7 @@
             "For_each": {
                 "foreach": "@body('Parse_JSON')?['data']",
                 "actions": {
-                    "HTTP_1": {
+                    "Set_license_type_to_Paid": {
                         "type": "Http",
                         "inputs": {
                             "uri": "https://management.azure.com@{item()?['id']}/extensions/@{item()?['ExtensionType']}?api-version=2025-01-13",
@@ -143,7 +145,9 @@
                                 }
                             },
                             "authentication": {
-                                "type": "ManagedServiceIdentity"
+                                "type": "ManagedServiceIdentity",
+                                "identity": "${MI_ID}",
+                                "audience": ""
                             }
                         },
                         "runtimeConfiguration": {

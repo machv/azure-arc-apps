@@ -45,7 +45,9 @@
                         "query": "resources | where type =~ 'microsoft.hybridcompute/machines' | extend status = tostring(properties.status) | extend osType = tostring(properties.osType) | extend osEdition = tostring(properties.osEdition) | extend osSku = tostring(properties.osSku) | extend licenseStatus = tostring(properties.licenseProfile.licenseStatus) | extend licenseChannel = tostring(properties.licenseProfile.licenseChannel) | extend softwareAssurance = tostring(properties.licenseProfile.softwareAssurance.softwareAssuranceCustomer) | project id,name, location, resourceGroup, subscriptionId, osType, osEdition,osSku,licenseStatus, licenseChannel, softwareAssurance | where osType =~ 'windows' and licenseStatus =~ 'licensed' and softwareAssurance !~ 'true'"
                     },
                     "authentication": {
-                        "type": "ManagedServiceIdentity"
+                        "type": "ManagedServiceIdentity",
+                        "identity": "${MI_ID}",
+                        "audience": ""
                     }
                 },
                 "runtimeConfiguration": {
@@ -156,7 +158,9 @@
                                 }
                             },
                             "authentication": {
-                                "type": "ManagedServiceIdentity"
+                                "type": "ManagedServiceIdentity",
+                                "identity": "${MI_ID}",
+                                "audience": ""
                             }
                         },
                         "runtimeConfiguration": {
