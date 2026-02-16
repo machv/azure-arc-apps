@@ -15,7 +15,11 @@ This repository contains multiple Logic Apps aimed to help with management of on
 
 Main Bicep script is `main.bicep` with parameters file `main.bicepparam` that needs to be updated at least with list of Azure subscription IDs where Event Grid should listen to Azure resource manager events. 
 
-## Azure CLI
+### Azure Portal
+
+[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmachv%2Fazure-arc-apps%2Fmain%2Fmain.json)
+
+### Azure CLI
 
 1. Ensure you are logged in and there is resource group for deployment (e.g.: `rg-arc-apps`)
 
@@ -27,5 +31,5 @@ az group create --location swedencentral --name rg-arc-apps
 2. Run the deployment command from this folder:
 
 ```bash
-az deployment group create --resource-group rg-arc-apps --template-file main.bicep --parameters main.bicepparam
+az deployment group create --resource-group 02-RG-ARC-APPS --template-file main.bicep --parameters main.bicepparam
 ```

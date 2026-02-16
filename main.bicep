@@ -1,12 +1,15 @@
-param location string = resourceGroup().location
+var location = resourceGroup().location
+var subscriptionId = subscription().subscriptionId
 
-param deployArcWebhook bool = true
-param subscriptionId string = subscription().subscriptionId
+@description('Whether to deploy Logic App with webhook triggered when Arc machine is created.')
+param deployArcWebhook bool = false
 
 param windowsServerLogicAppWebhookName string = 'la-arc-sa-windows-webhook'
 param windowsServerLogicAppScheduledName string = 'la-arc-sa-windows-scheduled'
 param sqlServerLogicAppScheduledName string = 'la-arc-sa-sql-scheduled'
+@description('Only needed if webhook Logic Apps is being deployed.')
 param integrationAccountName string = 'ia-arc-logic'
+@description('If there is already a system topic created for subscription events, provide the name here to reuse it. If not provided, a new system topic will be created.')
 param subscriptionSystemTopicName string = ''
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
