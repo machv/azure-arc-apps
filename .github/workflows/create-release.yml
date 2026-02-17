@@ -74,11 +74,11 @@ jobs:
           }
           
           $raw = '${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main.json'
-          $encodedArmJsonUrl = [System.Net.WebUtility]::HtmlEncode($raw)
+          $encodedArmJsonUrl = [System.Net.WebUtility]::UrlEncode($raw)
 
           $changeLogContent = @"
           [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrl)
-          
+
           "@
           
           if($changelog -ne "") {
