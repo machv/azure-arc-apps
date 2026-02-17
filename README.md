@@ -17,7 +17,8 @@ Main Bicep script is `main.bicep` with parameters file `main.bicepparam` that ne
 
 ### Azure Portal
 
-[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmachv%2Fazure-arc-apps%2Fmain%2Fmain.json)
+> [!TIP]
+> Deploy to Azure button is available for quick deployment via Azure Portal in the description of each release in _Releases_ section of this repository.
 
 ### Azure CLI
 
@@ -31,5 +32,5 @@ az group create --location swedencentral --name rg-arc-apps
 2. Run the deployment command from this folder:
 
 ```bash
-az deployment group create --resource-group 02-RG-ARC-APPS --template-file main.bicep --parameters main.bicepparam
+az deployment group create --resource-group rg-arc-apps --template-file main.bicep --parameters main.bicepparam
 ```
