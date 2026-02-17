@@ -2,7 +2,7 @@ name: Create release
 
 defaults:
   run:
-    shell: powershell
+    shell: pwsh
 
 on:
   workflow_dispatch: 
@@ -11,7 +11,7 @@ jobs:
   new-version:
     environment: release
     name: Bump version
-    runs-on: windows-latest
+    runs-on: linux-latest
     permissions:
       # needed to create a release
       contents: write 
@@ -48,7 +48,7 @@ jobs:
 
   new-release:
     name: Create release
-    runs-on: windows-latest
+    runs-on: linux-latest
     permissions:
       # needed to create a release
       contents: write 
@@ -58,12 +58,12 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build Bicep
-        shell: pwsh
+        shell: bash
         run: |
-          az bicep build --file main.bicep --parameters main.bicepparam
+          az bicep build --file main.bicep
       - name: Create changelog
         id: changelog
-        shell: powershell
+        shell: pwsh
         run: |
           if("${{ needs.new-version.outputs.previous_tag }}" -ne "") {
             $changelog = (& { git log ${{ needs.new-version.outputs.previous_tag }}..HEAD --pretty=format:'- %s (%h)' --abbrev-commit -- . }) -join "`n"
