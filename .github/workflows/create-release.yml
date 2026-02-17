@@ -1,0 +1,97 @@
+name: Create release
+
+defaults:
+  run:
+    shell: powershell
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  new-version:
+    environment: release
+    name: Bump version
+    runs-on: windows-latest
+    permissions:
+      # needed to create a release
+      contents: write 
+    outputs:
+      previous_tag: ${{ steps.bump.outputs.previous_tag }}
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: bump
+        name: Bump version
+        run: |
+          $today = Get-Date
+          $newVersion = @($today.ToString("yy"), "1")
+          git fetch --tags
+          # Get the latest tag that matches our versioning schema (starts with letter v)
+          $hash = git rev-list --tags=v* --topo-order --max-count=1
+          if($hash) {
+            $currentTag = git describe --tags $hash
+            $parts = $currentTag.Substring(1) -split '\.'
+            if($parts[0] -eq $today.ToString("yy")) { $newVersion[1] = ([int]$parts[1] + 1).ToString("0") }
+          }
+          
+          $newTag = "v" + ($newVersion -join ".")
+          git tag $newTag
+          if(-not $?) {
+            throw "Tagging of new release version failed!"
+          }
+          
+          git push origin $newTag
+
+          "New version: $newTag"
+          echo "previous_tag=$currentTag" >> $env:GITHUB_OUTPUT
+          echo "new_tag=$newTag" >> $env:GITHUB_OUTPUT
+
+  new-release:
+    name: Create release
+    runs-on: windows-latest
+    permissions:
+      # needed to create a release
+      contents: write 
+    needs: new-version
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build Bicep
+        shell: pwsh
+        run: |
+          az bicep build --file main.bicep --parameters main.bicepparam
+      - name: Create changelog
+        id: changelog
+        shell: powershell
+        run: |
+          if("${{ needs.new-version.outputs.previous_tag }}" -ne "") {
+            $changelog = (& { git log ${{ needs.new-version.outputs.previous_tag }}..HEAD --pretty=format:'- %s (%h)' --abbrev-commit -- . }) -join "`n"
+            "Changes for ${{ needs.new-version.outputs.previous_tag }} are:"
+            $changelog
+          } else {
+            $changelog = ""
+          }
+          
+          $changeLogContent = @"
+          :package: [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2F${{ github.server_url }}%2F${{ github.repository }}%2Freleases%2Fdownload%2F${{ needs.new-version.outputs.new_tag }}%2Fmain.json)
+            
+          "@
+          
+          if($changelog -ne "") {
+            $changeLogContent += @"
+          ## Changes in this version
+          $changelog
+          "@
+          }
+          
+          Set-Content -Value $changeLogContent -Path .\changelog.md
+      - name: Create new release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.new-version.outputs.new_tag }} # ${{ github.ref }}
+          name: Release ${{ needs.new-version.outputs.new_tag }} # ${{ github.ref }}
+          generate_release_notes: false
+          body_path: changelog.md
+          files: |
+           main.json
