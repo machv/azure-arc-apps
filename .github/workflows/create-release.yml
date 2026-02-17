@@ -73,7 +73,7 @@ jobs:
             $changelog = ""
           }
           
-          $raw = '${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main.json'
+          $raw = 'https://cors.mach.im/${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main.json'
           $encodedArmJsonUrl = [System.Net.WebUtility]::UrlEncode($raw)
 
           $changeLogContent = @"
