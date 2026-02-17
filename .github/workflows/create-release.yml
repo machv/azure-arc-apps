@@ -11,7 +11,7 @@ jobs:
   new-version:
     environment: release
     name: Bump version
-    runs-on: linux-latest
+    runs-on: ubuntu-latest
     permissions:
       # needed to create a release
       contents: write 
@@ -48,7 +48,7 @@ jobs:
 
   new-release:
     name: Create release
-    runs-on: linux-latest
+    runs-on: ubuntu-latest
     permissions:
       # needed to create a release
       contents: write 
