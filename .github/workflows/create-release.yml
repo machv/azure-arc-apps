@@ -73,9 +73,11 @@ jobs:
             $changelog = ""
           }
           
+          $raw = '${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main.json'
+          $encodedArmJsonUrl = [System.Net.WebUtility]::HtmlEncode($raw)
+
           $changeLogContent = @"
-          :package: [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2F${{ github.server_url }}%2F${{ github.repository }}%2Freleases%2Fdownload%2F${{ needs.new-version.outputs.new_tag }}%2Fmain.json)
-            
+          [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrl)
           "@
           
           if($changelog -ne "") {
