@@ -26,15 +26,10 @@ Deploy the latest version of this directly to Azure interactively
 
 ### Azure CLI
 
-1. Ensure you are logged in and there is resource group for deployment (e.g.: `rg-arc-apps`)
+Deployment is made at `subscription` level, resource group for Logic apps will be created if needed.
 
-if not:
-```bash
-az group create --location swedencentral --name rg-arc-apps
-```
-
-2. Run the deployment command from this folder:
+1. Run the deployment command from this folder:
 
 ```bash
-az deployment group create --resource-group rg-arc-apps --template-file main.bicep --parameters main.bicepparam
+az deployment sub create --location swedencentral --template-file main.bicep --parameters main.bicepparam
 ```
