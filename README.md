@@ -32,10 +32,19 @@ Deploy the latest version of this directly to Azure interactively
 
 ### Azure CLI
 
-Deployment is made at `subscription` level, resource group for Logic apps will be created if needed.
+Deployment can be made at subscription or management group level, resource group for Logic apps will be created if needed.
 
 1. Run the deployment command from this folder:
 
+#### Subscription level 
 ```bash
-az deployment sub create --location swedencentral --template-file main.bicep --parameters main.bicepparam
+az deployment sub create --location swedencentral --template-file main-sub.bicep --parameters main-sub.bicepparam
+```
+
+#### Management group level
+
+In this case you need to update `main-mg.bicepparam` with `subscriptionId` parameter where Logic Apps resource group should be created.
+
+```bash
+az deployment mg create --location swedencentral --template-file main-mg.bicep --parameters main-mg.bicepparam
 ```

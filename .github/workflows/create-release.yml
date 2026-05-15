@@ -82,7 +82,7 @@ jobs:
           $changeLogContent = @"
 
           | Subscription deployment  | Management Group deployment |
-          | ------------- | ------------- |
+          | :---: | :---: |
           | This option deploys Logic Apps to selected subscription with RBAC role needed to query Resource Graph would assigned on that subscription. | This option deploys Logic Apps to one subscription and RBAC role needed to query Resource Graph would be assigned at the management group level. |
           | [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrlSub)  | [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrlMg) |
 

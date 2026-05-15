@@ -1,8 +1,5 @@
 targetScope = 'subscription'
 
-//@description('The Azure region for resources')
-//param location string = 'eastus'
-
 @description('The name of the resource group where Logic Apps will be created.')
 param logicAppsResourceGroupName string = 'rg-arc-logicapps'
 
