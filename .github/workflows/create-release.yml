@@ -104,4 +104,5 @@ jobs:
           generate_release_notes: false
           body_path: changelog.md
           files: |
-           main.json
+           main-sub.json
+           main-mg.json
