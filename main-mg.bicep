@@ -24,7 +24,7 @@ param integrationAccountName string = 'ia-arc-logic'
 @description('If there is already a system topic created for subscription events, provide the name here to reuse it. If not provided, a new system topic will be created.')
 param subscriptionSystemTopicName string = ''
 
-module subscriptionDeployment 'main.bicep' = {
+module subscriptionDeployment 'main-sub.bicep' = {
   name: 'subscription-deployment'
   scope: subscription(subscriptionId)
 

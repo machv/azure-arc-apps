@@ -19,7 +19,13 @@ Main Bicep script is `main.bicep` with parameters file `main.bicepparam` that ne
 
 Deploy the latest version of this directly to Azure interactively
 
-[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcors.mach.im%2Fhttps%3A%2F%2Fgithub.com%2Fmachv%2Fazure-arc-apps%2Freleases%2Flatest%2Fdownload%2Fmain.json)
+| Subscription deployment  | Management Group deployment |
+| :---: | :---: |
+| This option deploys Logic Apps to selected subscription with RBAC role needed to query Resource Graph would assigned on that subscription. | This option deploys Logic Apps to one subscription and RBAC role needed to query Resource Graph would be assigned at the management group level. |
+| [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcors.mach.im%2Fhttps%3A%2F%2Fgithub.com%2Fmachv%2Fazure-arc-apps%2Freleases%2Flatest%2Fdownload%2Fmain-sub.json)  | [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcors.mach.im%2Fhttps%3A%2F%2Fgithub.com%2Fmachv%2Fazure-arc-apps%2Freleases%2Flatest%2Fdownload%2Fmain-mg.json) |
+
+
+
 
 > [!TIP]
 > Deploy to Azure using this button is also available in the description of each release in _Releases_ section of this repository.

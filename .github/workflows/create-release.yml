@@ -60,7 +60,8 @@ jobs:
       - name: Build Bicep
         shell: bash
         run: |
-          az bicep build --file main.bicep
+          az bicep build --file main-sub.bicep
+          az bicep build --file main-mg.bicep
       - name: Create changelog
         id: changelog
         shell: pwsh
@@ -73,11 +74,17 @@ jobs:
             $changelog = ""
           }
           
-          $raw = 'https://cors.mach.im/${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main.json'
-          $encodedArmJsonUrl = [System.Net.WebUtility]::UrlEncode($raw)
+          $rawSub = 'https://cors.mach.im/${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main-sub.json'
+          $encodedArmJsonUrlSub = [System.Net.WebUtility]::UrlEncode($rawSub)
+          $rawMg = 'https://cors.mach.im/${{ github.server_url }}/${{ github.repository }}/releases/download/${{ needs.new-version.outputs.new_tag }}/main-mg.json'
+          $encodedArmJsonUrlMg = [System.Net.WebUtility]::UrlEncode($rawMg)
 
           $changeLogContent = @"
-          [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrl)
+
+          | Subscription deployment  | Management Group deployment |
+          | ------------- | ------------- |
+          | This option deploys Logic Apps to selected subscription with RBAC role needed to query Resource Graph would assigned on that subscription. | This option deploys Logic Apps to one subscription and RBAC role needed to query Resource Graph would be assigned at the management group level. |
+          | [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrlSub)  | [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/$encodedArmJsonUrlMg) |
 
           "@
           
