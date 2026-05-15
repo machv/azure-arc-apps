@@ -19,17 +19,32 @@ Main Bicep script is `main.bicep` with parameters file `main.bicepparam` that ne
 
 Deploy the latest version of this directly to Azure interactively
 
-[![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcors.mach.im%2Fhttps%3A%2F%2Fgithub.com%2Fmachv%2Fazure-arc-apps%2Freleases%2Flatest%2Fdownload%2Fmain.json)
+| Subscription deployment  | Management Group deployment |
+| :---: | :---: |
+| This option deploys Logic Apps to selected subscription with RBAC role needed to query Resource Graph would assigned on that subscription. | This option deploys Logic Apps to one subscription and RBAC role needed to query Resource Graph would be assigned at the management group level. |
+| [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcors.mach.im%2Fhttps%3A%2F%2Fgithub.com%2Fmachv%2Fazure-arc-apps%2Freleases%2Flatest%2Fdownload%2Fmain-sub.json)  | [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcors.mach.im%2Fhttps%3A%2F%2Fgithub.com%2Fmachv%2Fazure-arc-apps%2Freleases%2Flatest%2Fdownload%2Fmain-mg.json) |
+
+
+
 
 > [!TIP]
 > Deploy to Azure using this button is also available in the description of each release in _Releases_ section of this repository.
 
 ### Azure CLI
 
-Deployment is made at `subscription` level, resource group for Logic apps will be created if needed.
+Deployment can be made at subscription or management group level, resource group for Logic apps will be created if needed.
 
 1. Run the deployment command from this folder:
 
+#### Subscription level 
 ```bash
-az deployment sub create --location swedencentral --template-file main.bicep --parameters main.bicepparam
+az deployment sub create --location swedencentral --template-file main-sub.bicep --parameters main-sub.bicepparam
+```
+
+#### Management group level
+
+In this case you need to update `main-mg.bicepparam` with `subscriptionId` parameter where Logic Apps resource group should be created.
+
+```bash
+az deployment mg create --location swedencentral --template-file main-mg.bicep --parameters main-mg.bicepparam
 ```

@@ -1,7 +1,7 @@
-targetScope = 'subscription'
+targetScope = 'managementGroup'
 
-//@description('The Azure region for resources')
-//param location string = 'eastus'
+@description('The subscription ID where resources will be deployed.')
+param subscriptionId string
 
 @description('The name of the resource group where Logic Apps will be created.')
 param logicAppsResourceGroupName string = 'rg-arc-logicapps'
@@ -24,35 +24,32 @@ param integrationAccountName string = 'ia-arc-logic'
 @description('If there is already a system topic created for subscription events, provide the name here to reuse it. If not provided, a new system topic will be created.')
 param subscriptionSystemTopicName string = ''
 
-resource appsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: logicAppsResourceGroupName
-  location: deployment().location
-}
+module subscriptionDeployment 'main-sub.bicep' = {
+  name: 'subscription-deployment'
+  scope: subscription(subscriptionId)
 
-module logicApps 'logic-apps.bicep' = {
-  name: 'rg-deployment'
-  scope: appsResourceGroup
-  
   params: {
+    logicAppsResourceGroupName: logicAppsResourceGroupName
     deployArcWebhook: deployArcWebhook
     windowsServerLogicAppWebhookName: windowsServerLogicAppWebhookName
     windowsServerLogicAppScheduledName: windowsServerLogicAppScheduledName
     sqlServerLogicAppScheduledName: sqlServerLogicAppScheduledName
     integrationAccountName: integrationAccountName
     subscriptionSystemTopicName: subscriptionSystemTopicName
+    deployRoleAssignment: false
   }
 }
 
 var azureConnectedMachineResourceAdminRoleId = 'cd570a14-e51a-42ad-bac8-bafd67325302'
+
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(appsResourceGroup.id, azureConnectedMachineResourceAdminRoleId)
-  scope: subscription()
+  name: guid(managementGroup().id, subscriptionId, azureConnectedMachineResourceAdminRoleId)
   properties: {
-    roleDefinitionId: subscriptionResourceId(
+    roleDefinitionId: tenantResourceId(
       'Microsoft.Authorization/roleDefinitions',
       azureConnectedMachineResourceAdminRoleId
     )
-    principalId: logicApps.outputs.miPrincipalId
+    principalId: subscriptionDeployment.outputs.miPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
