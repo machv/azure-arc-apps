@@ -24,6 +24,9 @@ param integrationAccountName string = 'ia-arc-logic'
 @description('If there is already a system topic created for subscription events, provide the name here to reuse it. If not provided, a new system topic will be created.')
 param subscriptionSystemTopicName string = ''
 
+@description('Whether to deploy the role assignment at subscription scope. Set to false when role is assigned at management group level.')
+param deployRoleAssignment bool = true
+
 resource appsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: logicAppsResourceGroupName
   location: deployment().location
@@ -44,7 +47,7 @@ module logicApps 'logic-apps.bicep' = {
 }
 
 var azureConnectedMachineResourceAdminRoleId = 'cd570a14-e51a-42ad-bac8-bafd67325302'
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployRoleAssignment) {
   name: guid(appsResourceGroup.id, azureConnectedMachineResourceAdminRoleId)
   scope: subscription()
   properties: {
@@ -56,3 +59,5 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalType: 'ServicePrincipal'
   }
 }
+
+output miPrincipalId string = logicApps.outputs.miPrincipalId
